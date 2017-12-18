@@ -39,13 +39,17 @@
 <script src="stats.min.js"></script>
 <script src="OrbitControls.js"></script>
 <script src="OBJLoader.js"></script>
+<script src="dat.gui.js"></script>
 <script>
 
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
-    var container, stats;
+    var container;
+    var stats;
 
-    var camera, scene, renderer;
+    var camera;
+    var scene;
+    var renderer;
 
     var light;
 
@@ -54,7 +58,11 @@
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
-    var geometry, sprite, material, particles;
+    var colors = [];
+    var geometry;
+    var sprite;
+    var material;
+    var particles;
 
     init();
     animate();
@@ -83,6 +91,59 @@
         canvas.width = 128;
         canvas.height = 128;
 
+        function doSetup(object) {
+            geometry = new THREE.Geometry();
+            sprite = new THREE.TextureLoader().load("disc.png");
+
+            object.traverse(function (child, i) {
+                if (child instanceof THREE.Mesh) {
+                    var gWithV = new THREE.Geometry().fromBufferGeometry(child.geometry);
+                    gWithV.vertices.map(function (v) {
+                        var vertex = new THREE.Vector3();
+                        vertex.x = v.x * 5000;
+                        vertex.y = v.y * 5000;
+                        vertex.z = v.z * 5000;
+                        geometry.vertices.push(vertex);
+
+                        // colors[i] = new THREE.Color(0xffffff);
+                        // colors[i].setHSL((vertex.x + 1000) / 2000, 1, 0.5);
+
+                        geometry.colors.push(new THREE.Color(Math.random(), Math.random(), Math.random()));
+
+
+                    })
+
+                }
+            });
+            // geometry.colors = colors;
+            material = new THREE.PointsMaterial({
+                size: 40,
+                sizeAttenuation: false,
+                map: sprite,
+                alphaTest: 0.5,
+                transparent: true,
+                vertexColors: THREE.VertexColors
+            });
+
+            // material = new THREE.PointsMaterial( { size: 85, map: sprite, vertexColors: THREE.VertexColors, alphaTest: 0.5, transparent: true } );
+
+            // material.color.setHSL(1.0, 0.3, 0.7);
+            // material.color.setRGB(0.24, 0.94, 1.00);
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+
+
+
+
+            var gui = new dat.GUI({
+                height: 5 * 32 - 1
+            });
+            gui.add(material, 'size').min(0).max(100).onFinishChange(function () {
+                // refresh based on the new value of params.interation
+            })
+        }
 
         var loader = new THREE.OBJLoader();
         loader.load(
@@ -90,41 +151,7 @@
             'bunny.obj',
             // called when resource is loaded
             function (object) {
-
-                // scene.add(object);
-                var context = canvas.getContext('2d');
-                //TODO add points
-
-                geometry = new THREE.Geometry();
-                sprite = new THREE.TextureLoader().load("disc.png");
-
-                object.traverse(function (child) {
-                    if (child instanceof THREE.Mesh) {
-                        var gWithV = new THREE.Geometry().fromBufferGeometry(child.geometry);
-                        gWithV.vertices.map(function (v) {
-                            var vertex = new THREE.Vector3();
-                            vertex.x = v.x*5000;
-                            vertex.y = v.y*5000;
-                            vertex.z = v.z*5000;
-                            geometry.vertices.push(vertex);
-                        })
-
-                    }
-                });
-                material = new THREE.PointsMaterial({
-                    size: 40,
-                    sizeAttenuation: false,
-                    map: sprite,
-                    alphaTest: 0.5,
-                    transparent: true
-                });
-                // material.color.setHSL(1.0, 0.3, 0.7);
-                material.color.setRGB(0.24,0.94,1.00);
-
-                particles = new THREE.Points(geometry, material);
-                scene.add(particles);
-
-
+                doSetup(object);
             },
             // called when loading is in progresses
             function (xhr) {
@@ -139,6 +166,7 @@
 
             }
         );
+
 
         renderer = new THREE.WebGLRenderer({antialias: true});
         renderer.setPixelRatio(window.devicePixelRatio);
