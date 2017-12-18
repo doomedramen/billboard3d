@@ -40,7 +40,7 @@
 <script src="Detector.js"></script>
 <script src="stats.min.js"></script>
 <script src="OrbitControls.js"></script>
-<script src="OBJLoader.js"></script>
+<script src="WOOLoader.js"></script>
 <script src="dat.gui.js"></script>
 <script>
 
@@ -87,68 +87,57 @@
         camera.position.set(3000, 50, 1500);
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffffff);
-
-        // light = new THREE.DirectionalLight(0xffffff);
-        // light.position.set(0, 0, 1);
-        // scene.add(light);
-
-        // shadow
+        scene.background = new THREE.Color(0x72645b);
 
         var canvas = document.createElement('canvas');
         canvas.width = 128;
         canvas.height = 128;
 
-        function doSetup(object) {
-            geometry = new THREE.Geometry();
-            sprite = new THREE.TextureLoader().load("disc.png");
-
-            object.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    var gWithV = new THREE.Geometry().fromBufferGeometry(child.geometry);
-                    shuffle(gWithV.vertices).map(function (v, i) {
-
-                        if (i % 20 === 0) {
-                            var vertex = new THREE.Vector3();
-                            vertex.x = v.x * 5000;
-                            vertex.y = v.y * 5000;
-                            vertex.z = v.z * 5000;
-                            geometry.vertices.push(vertex);
-                            geometry.colors.push(new THREE.Color(Math.random(), Math.random(), Math.random()));
-                        }
-
-
-                    })
-
-                }
-            });
-            // geometry.colors = colors;
-            material = new THREE.PointsMaterial({
-                size: 40,
-                sizeAttenuation: false,
-                map: sprite,
-                alphaTest: 0.5,
-                transparent: true,
-                vertexColors: THREE.VertexColors
-            });
-
-            particles = new THREE.Points(geometry, material);
-            scene.add(particles);
-
-
-            var gui = new dat.GUI({
-                height: 5 * 32 - 1
-            });
-            gui.add(material, 'size').min(0).max(100);
-        }
-
-        var loader = new THREE.OBJLoader();
+        var loader = new THREE.WOOLoader();
         loader.load(
             // resource URL
-            'bunny.obj',
+            'skull.woo',
             // called when resource is loaded
             function (object) {
-                doSetup(object);
+                geometry = new THREE.Geometry();
+                sprite = new THREE.TextureLoader().load("disc.png");
+
+                // console.log(object);
+
+                object.map(function (v, i) {
+                    // if (i % 20 === 0) {
+                    var vertex = new THREE.Vector3();
+                    vertex.x = v.x * 100;
+                    vertex.y = v.y * 100;
+                    vertex.z = v.z * 100;
+                    geometry.vertices.push(vertex);
+                    geometry.colors.push(new THREE.Color(Math.random(), Math.random(), Math.random()));
+                    // geometry.colors.push(new THREE.Color((1.0/255)*v.r, (1.0/255)*v.g, (1.0/255)*v.b));
+                    // }
+                });
+                // geometry.colors = colors;
+                material = new THREE.PointsMaterial({
+                    size: 40,
+                    // sizeAttenuation: false,
+                    map: sprite,
+                    alphaTest: 0.5,
+                    transparent: true,
+                    vertexColors: THREE.VertexColors
+                });
+
+                particles = new THREE.Points(geometry, material);
+                scene.add(particles);
+
+
+                var gui = new dat.GUI({
+                    height: 5 * 32 - 1
+                });
+                gui.add(material, 'size').min(0).max(1000);
+            }, function (err) {
+                // console.error(err);
+            },
+            function (err) {
+                // console.error(err);
             }
         );
 
